@@ -1,0 +1,15 @@
+1. Improve health check time when there are more than 20 targets - optimize it
+2. What if the server crashes, asynchronolously write config of servers into disk/DB
+3. Create option to add more targets dynamically - auto scaling... Have a separate service to monitor CPU/Memory/Disk or whatever the trigger is
+4. Add Logging
+6. Option to add custom headers 
+7. Allow different algorithms for load balancing
+8. Add support for algorithms like least number of connections and least response time.
+9. Graceful shutdown.
+10. Optimize handling of incoming requests.
+11. Return the response from the upstream target
+12. Improve the storage mechanism making it persistent
+13. Add UUID to request for traceability - 
+15. Sticky sessions
+16. request metric integration
+17. configurable request timeout, retries
