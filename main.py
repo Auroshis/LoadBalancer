@@ -1,49 +1,24 @@
-import uuid
-from aiohttp import web, ClientSession
-from balancer import LoadBalancer
+from fastapi import FastAPI
+from config_loader import ConfigLoader
+from logger import Logger
+from request_handler import create_router
 from health_checker import HealthChecker
+from load_balancer import LoadBalancer
 
-SERVERS = ["localhost:8001", "localhost:8002"]
+# 1. Init logger
+logger = Logger()
 
-balancer = LoadBalancer(SERVERS)
-checker = HealthChecker(SERVERS, balancer)
+# 2. Load config from etcd
+loader = ConfigLoader(etcd_host="etcd")  # Use 'etcd' service in Docker
+global_config = loader.load_global_config()
+servers = loader.load_server_config()
+
+# 3. Initialize balancer
+lb = LoadBalancer(servers)
+checker = HealthChecker(servers, lb)
 checker.start()
 
-async def handle_request(request: web.Request):
-    try:
-        target = balancer.get_server_round_robin()
-        trace_id = str(uuid.uuid4())
-        path = request.rel_url
-        url = f"http://{target}{path}"
-
-        headers = dict(request.headers)
-        headers["X-Trace-ID"] = trace_id
-
-        body = await request.read()
-
-        async with ClientSession() as session:
-            async with session.request(
-                method=request.method,
-                url=url,
-                headers=headers,
-                data=body,
-                allow_redirects=False,
-                timeout=5
-            ) as resp:
-                response_body = await resp.read()
-
-                # Build response
-                return web.Response(
-                    status=resp.status,
-                    body=response_body,
-                    headers=resp.headers
-                )
-
-    except Exception as e:
-        return web.Response(status=503, text=f"Error: {e}")
-
-app = web.Application()
-app.router.add_route("*", "/{tail:.*}", handle_request)
-
-if __name__ == "__main__":
-    web.run_app(app, port=8080)
+# 4. Build FastAPI app
+app = FastAPI()
+router = create_router(lb, global_config, logger)
+app.include_router(router)

@@ -14,7 +14,7 @@ class HealthChecker(threading.Thread):
         while True:
             for server in self.servers:
                 try:
-                    r = requests.get(f"http://{server}", timeout=2)
+                    r = requests.get(f"http://{server}/health", timeout=2)
                     self.balancer.update_health(server, r.status_code == 200)
                 except:
                     self.balancer.update_health(server, False)
