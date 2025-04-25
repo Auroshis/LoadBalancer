@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+protobuf==3.20.*
+etcd3
+httpx
+requests

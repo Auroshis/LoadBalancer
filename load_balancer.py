@@ -25,5 +25,4 @@ class LoadBalancer:
         return healthy_servers[key % len(healthy_servers)]
 
     def update_health(self, server, is_healthy):
-        with self.lock:
-            self.healthy[server] = is_healthy
+        self.healthy[server] = is_healthy
